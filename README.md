@@ -1,7 +1,7 @@
 # CS-525: Advanced Database Organization
   For Advanced Databse Organization(ADO) programming assignments at IIT, Spring 2023.
   
-## Below are the four assignments that would be performed during this course.
+### Below are the four assignments that would be performed during this course.
 
 ### Assignment 1 - Storage Manager: 
 - Implement a storage manager that allows read/writing of blocks to/from a file on disk. <br>
