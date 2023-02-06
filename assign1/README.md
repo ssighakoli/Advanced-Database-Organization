@@ -38,30 +38,30 @@ Below are the steps followed inside getBlockPos:
 - Check if the file is opened successfully.
 - Get the current position of the block.
 
-#### readFirstBlock(...)
+#### readFirstBlock()
 This method reads the first page in a file. 
 Below are the steps followed inside readFirstBlock:
 - Use the above readBlock() method and set pageNum to 0.
 
-#### readPreviousBlock(....)
+#### readPreviousBlock()
 This method reads the previous page relative to the current page position of the file.The curPagePos should be moved to the page that was read. 
 Below are the steps followed inside readPreviousBlock: 
 - Calculate the current block position.
 - Use the above readBlock() method and set pageNum to (current block position - 1).
 
-#### readCurrentBlock:
+#### readCurrentBlock():
 This method reads the current page relative to the current page position of the file.The curPagePos should be moved to the page that was read. 
 Below are the steps followed inside readCurrentBlock:
 - Calculate the current block position.
 - Use the above readBlock() method and set pageNum to current block position.
 
-#### readNextBlock:
+#### readNextBlock():
 This method reads the next page relative to the current page position of the file.The curPagePos should be moved to the page that was read. 
 Below are the steps followed inside readNextBlock:
 - Calculate the current block position.
 - Use the above readBlock() method and set pageNum to (current block position + 1).
 
-#### readLastBlock:
+#### readLastBlock():
 This method reads the last page in a file. 
 Below are the steps followed inside readLastBlock:
 - Calculate the last block position as (total pages - 1).
