@@ -1,4 +1,4 @@
-# CS-525-AdvancedDatabase
+# CS-525-Advanced Database Organization
   For Advanced Databse Organization(ADO) programming assignments at IIT, Spring 2023.
   
 ## Below are the four assignments that would be performed during this course.
