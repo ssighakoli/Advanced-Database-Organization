@@ -304,7 +304,7 @@ extern RC appendEmptyBlock (SM_FileHandle *fHandle){
     
     //Checks and ensures file situation by checking if its null and return memory not allocated.
     if (newEmptyPage == NULL) {
-       printError("Memory allocation failed!")
+       printError("Memory allocation failed!");
     }
     
     //This will help append an empty block if its empty. 
