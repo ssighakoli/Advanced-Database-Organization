@@ -1,5 +1,4 @@
 CC = gcc
-CFLAGS = -I
 ALL_FILES = storage_mgr.h dberror.h test_helper.h
 STORAGE_FILES = storage_mgr.c storage_mgr.h
 ERROR_FILES = dberror.c dberror.h 
