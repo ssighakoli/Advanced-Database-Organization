@@ -10,7 +10,7 @@
 
 1. Connect to fourier server using the command: ssh username@fourier.cs.iit.edu
 2. Clone to the git repository using the commnd: git clone https://github.com/IITTeaching/cs525-s23-group-6.git
-3. Create a new testing directory using the command: cd test
+3. Change to assign1 folder using the command: cd assign1
 4. List the files in the directory using the command: ls
 5. Use the command 'make clean' to delete old .o files.
 6. Use the command 'make' to compile all files in the directory.
