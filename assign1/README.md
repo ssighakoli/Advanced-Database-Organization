@@ -21,7 +21,7 @@
 11. Use the command 'make run_test_additional' to run the additional test case.
 
 
-### Additional functional included:
+### Additional functionality included:
 - We made sure that filePointer is closed whenever opened to avoid memory leaks.
 - We have written an additional test case file to test readFirstBlock, readNextBlock, readPreviousBlock, writeBlock, writeCurrentBlock, ensureCapacity methods.
 
