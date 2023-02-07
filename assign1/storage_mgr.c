@@ -81,10 +81,9 @@ extern RC readBlock (int pageNum, SM_FileHandle *fHandle, SM_PageHandle memPage)
 	      fHandle->curPagePos = pageNum;
     }
 
-	// Closing the file stream    	
-	fclose(filePointer);	
-  return RC_OK;
-		
+    // Closing the file stream    	
+    fclose(filePointer);	
+    return RC_OK;		
 }
 
 //This method returns the current page position in a file.
