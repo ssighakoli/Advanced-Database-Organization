@@ -48,6 +48,12 @@ extern RC readBlock (int pageNum, SM_FileHandle *fHandle, SM_PageHandle memPage)
 
     //Opening the file in READ mode
     filePointer = fopen(fHandle->fileName, "r");
+	
+    //To check if the file is opened successfully
+    if(filePointer == NULL){
+        RC_message = "File cannot be opened/does not exsit."
+        return RC_FILE_NOT_FOUND;
+    }
 
    //Checking if file handler is initialized. 
     if (fHandle == NULL){
@@ -59,12 +65,6 @@ extern RC readBlock (int pageNum, SM_FileHandle *fHandle, SM_PageHandle memPage)
     if (fHandle->totalNumPages < pageNum) {
         RC_message = "Requested page does not exist."
         return RC_READ_NON_EXISTING_PAGE;
-    }
-
-    //To check if the file is opened successfully
-    if(filePointer == NULL){
-        RC_message = "File cannot be opened/does not exsit."
-        return RC_FILE_NOT_FOUND;
     }
 
     //fseek is to set the file position of the stream to the given offset.
