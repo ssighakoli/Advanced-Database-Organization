@@ -48,7 +48,6 @@ extern RC createPageFile (char *fileName){
         RC_message = "File not found!";
         return RC_FILE_NOT_FOUND;
     }
-
 }
 
 //This method opens an existing file page.
