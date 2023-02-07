@@ -10,9 +10,6 @@ test_1: test_assign1_1.o storage_mgr.o dberror.o
 test_assign1_1.o: test_assign1_1.c $(ALL_FILES)
 	$(CC) -g -Wall -c test_assign1_1.c -lm
 
-test_assign1_2.o: test_assign1_2.c $(ALL_FILES)
-	$(CC) -g -Wall -c test_assign1_2.c -lm
-
 storage_mgr.o:  $(STORAGE_FILES)
 	$(CC) -g -Wall -c storage_mgr.c -lm
 
