@@ -86,9 +86,11 @@ The WriteBlock  methods are used to Write blocks of data from the page file into
 - Using the defined writeblock method to locate current page and to write the information on the current positioned block
 
 #### appendEmptyBlock()
+This method uses the exist writeblock to update an empty block.
 - checks and ensures file situation by checking if its null and return memory not allocated. 
-- This will help append an empty block if its empty.
+- This will help append/update an empty block if its empty.
 
 #### ensureCapacity()
 - Making sure more pages are added if insufficient.
+- Using this method, we can ensure the total number of pages is equal to the intended number of pages.
 
