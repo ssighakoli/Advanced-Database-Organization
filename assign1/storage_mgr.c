@@ -298,8 +298,7 @@ extern RC writeCurrentBlock (SM_FileHandle *fHandle, SM_PageHandle memPage){
 //This method increases number of pages in file by one by filling the newly created page with zero bytes.
 extern RC appendEmptyBlock (SM_FileHandle *fHandle){
 
-    //filePointer = fopen(fHandle->fileName, "a");
-
+    filePointer = fopen(fHandle->fileName, "a");
     //Using calloc memory allocation funtion to create an empty block
     SM_PageHandle newEmptyPage = (char*)calloc(PAGE_SIZE, sizeof(char));
     
@@ -308,12 +307,11 @@ extern RC appendEmptyBlock (SM_FileHandle *fHandle){
        printError("Memory allocation failed!")
     }
     
-    //This will help append an empty block if its empty.
-    return writeBlock(fHandle->totalNumPages, fHandle, newEmptyPage);
-    //fwrite(newEmptyPage, sizeof(char), PAGE_SIZE, filePointer);
+    //This will help append an empty block if its empty. 
+    fwrite(newEmptyPage, sizeof(char), PAGE_SIZE, filePointer);
     fHandle->totalNumPages++;
     free(newEmptyPage);
-    //fclose(filePointer);
+    fclose(filePointer);
     return RC_OK;
 
 }
