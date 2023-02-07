@@ -160,7 +160,7 @@ extern RC readBlock (int pageNum, SM_FileHandle *fHandle, SM_PageHandle memPage)
     int seekSuccess = fseek(fHandle->mgmtInfo, (PAGE_SIZE * sizeof(char) * pageNum), SEEK_SET);
 
     if(seekSuccess != 0){ 
-        printError("Seek Failed!")
+        printError("Seek Failed!");
     }
     else{
         //Read the content and store it in the location pointed out by memPage page handle.
@@ -303,7 +303,7 @@ extern RC appendEmptyBlock (SM_FileHandle *fHandle){
     
     //Checks and ensures file situation by checking if its null and return memory not allocated.
     if (newEmptyPage == NULL) {
-       printError("Memory allocation failed!");
+       printError("Memory allocation failed.");
     }
     
     //This will help append an empty block if its empty. 
