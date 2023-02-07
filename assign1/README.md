@@ -69,3 +69,26 @@ Below are the steps followed inside readLastBlock:
 
 
 ### WRITING BLOCKS TO DISC RELATED METHODS:
+
+The WriteBlock  methods are used to Write blocks of data from the page file into the disk.
+
+#### writeBlock()
+
+- Check the existance of the pagenum if it is within the range.
+- Openening the file in WRITE mode with roles->r+b
+- fseek to position
+- Write the content/data to the desired file 
+- Update the current page information 
+- Close the file after writing your information
+
+####  writeCurrentBlock()
+
+- Using the defined writeblock method to locate current page and to write the information on the current positioned block
+
+#### appendEmptyBlock()
+- checks and ensures file situation by checking if its null and return memory not allocated. 
+- This will help append an empty block if its empty.
+
+#### ensureCapacity()
+- Making sure more pages are added if insufficient.
+
