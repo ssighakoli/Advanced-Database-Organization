@@ -15,6 +15,36 @@
 
 ### MANIPULATING FILE RELATED METHODS:
 
+#### extern void initStorageManager (void)
+Initialize the Storage Manager and assign filePointer to null.
+
+#### extern RC createPageFile(char *fileName)
+
+- Initialising a file pointer and Opening file stream in 'w+' mode (read & write mode). It creates an empty file with both reading and writing operations.
+- Use calloc() function to allocate required block of memory.
+- Validate if the file already exists. If yes, write to the file and close the file using fclose() function.
+- Else, return RC_FILE_NOT_FOUND.
+
+#### extern RC openPageFile(char *fileName, SM_FileHandle *fHandle)
+
+- This method uses the previously created page file. Opens file stream in 'r+' mode (read & write mode). It creates an empty file with both reading and writing operations.
+- Check if the file exists. If yes, File handler parameters are assigned,fileName is assigned with the name of the current file, curPagePos is set to zero to mark the beginning of the page, the file pointer is assigned to mgmtInfo.
+- Move the pointer to EOF.
+- Total number of pages is calculated by dividing the file size calculated by using ftell() by size of each page.
+Now, set the calculated values to file handle parameters and use fseek() function to set the file pointer back to file beginning.
+- Return RC_OK.
+- Else, return RC_FILE_NOT_FOUND
+
+#### extern RC closePageFile(SM_FileHandle *fHandle)
+
+- Using one of the file pointer assigned before i.e., mgmtInfo check if file is null. If yes, return RC_FILE_NOT_FOUND. Else, close the file using fclose() and return RC_OK status.
+
+#### extern RC destroyPageFile(char *fileName)
+- Check if the file exists. If Yes, use remove() command to destroy the page .
+- Else, return RC_FILE_NOT_FOUND.
+
+
+
 ### READING BLOCKS FROM DISC RELATED METHODS:
 
 The read related methods are used to read blocks of data from the page file into the disk.
