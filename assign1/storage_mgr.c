@@ -45,7 +45,7 @@ extern RC createPageFile (char *fileName){
         return RC_OK;  
     }
     else{
-        RC_message = "File not found!"
+        RC_message = "File not found!";
         return RC_FILE_NOT_FOUND;
     }
 
