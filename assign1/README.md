@@ -14,9 +14,16 @@
 4. List the files in the directory using the command: ls
 5. Change to 'assign1' folder using the command: cd assign1
 6. List the files in the directory using the command: ls
-7. Use the command 'make clean' to delete old .o files of test1 and test2.
+7. Use the command 'make clean' to delete old .o files of test1 and additional test.
 8. Use the command 'make' to compile all files in the directory.
 9. Use the command 'make run_test_1' to run test1.
+10. Use the command 'make test_additional' to combine the additional test.
+11. Use the command 'make run_test_additional' to run the additional test case.
+
+
+### Additional functional included:
+- We made sure that filePointer is closed whenever opened to avoid memory leaks.
+- We have written an additional test case file to test readFirstBlock, readNextBlock, readPreviousBlock, writeBlock, writeCurrentBlock, ensureCapacity methods.
 
 
 ## SOLUTION DESCRIPTION:
