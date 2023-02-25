@@ -46,13 +46,11 @@ These functions are used pin pages, unpin pages, mark pages as dirty, and force 
 
 #### unpinPage():
 - This function is used to unpin the page. The field pageNum is used for this purpose.<br>
-
 This is implemented as below:<br>
 -
 
 #### forcePage():
 - This function is used to write the current content of the page back to the page file on disk.<br>
-
 This is implemented as below:<br>
 -
 
@@ -65,33 +63,28 @@ These functions return statistics about a buffer pool and its contents.<br>
 #### getFrameContents():
 - This function returns an array of PageNumbers (of size numPages) where the ith element is the number of the page stored in the ith page frame. <br>
 - An empty page frame is represented using the constant NO_PAGE. <br>
-
 This is implemented as below: <br>
 -
 
 #### getDirtyFlags():
 - This function returns an array of bools (of size numPages) where the ith element is TRUE if the page stored in the ith page frame is dirty. <br>
 - Empty page frames are considered as clean. <br>
-
 This is implemented as below: <br>
 -
 
 #### getFixCounts():
 - This function returns an array of ints (of size numPages) where the ith element is the fix count of the page stored in the ith page frame. <br>
 - Return 0 for empty page frames<br>
-
 This is implemented as below:<br>
 -
 
 #### getNumReadIO():
 - This function returns the number of pages that have been read from disk since a buffer pool has been initialized.<br>
-
 This is implemented as below:<br>
 -
 
 #### getNumWriteIO():
 - This function returns the number of pages written to the page file since the buffer pool has been initialized.<br>
-
 This is implemented as below:<br>
 -
 
