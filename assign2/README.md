@@ -45,7 +45,8 @@ These functions are used pin pages, unpin pages, mark pages as dirty, and force 
 #### markDirty():
 
 #### unpinPage():
-- This function is used to unpin the page. The field pageNum is used for this purpose.<br>
+- This function is used to unpin the page. 
+- The field pageNum is used for this purpose and the pin status of this page will be changed to 0.
 This is implemented as below:<br>
 -
 
