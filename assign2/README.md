@@ -40,20 +40,54 @@ In a database system, the buffer pool is used to cache frequently accessed data 
 #### forceFlushPool():
 
 ### Page Management functions:
+These functions are used pin pages, unpin pages, mark pages as dirty, and force a page back to disk.
 
 #### markDirty():
+
 #### unpinPage():
+- This function is used to unpin the page. The field pageNum is used for this purpose.
+This is implemented as below:
+-
+
 #### forcePage():
+- This function is used to write the current content of the page back to the page file on disk.
+This is implemented as below:
+-
+
 #### pinPage():
 
 
 ### Statistics functions:
+These functions return statistics about a buffer pool and its contents.
 
 #### getFrameContents():
+- This function returns an array of PageNumbers (of size numPages) where the ith element is the number of the page stored in the ith page frame. 
+- An empty page frame is represented using the constant NO_PAGE.
+This is implemented as below:
+-
+
 #### getDirtyFlags():
+- This function returns an array of bools (of size numPages) where the ith element is TRUE if the page stored in the ith page frame is dirty. 
+- Empty page frames are considered as clean.
+This is implemented as below:
+-
+
 #### getFixCounts():
+- This function returns an array of ints (of size numPages) where the ith element is the fix count of the page stored in the ith page frame. 
+- Return 0 for empty page frames
+This is implemented as below:
+-
+
 #### getNumReadIO():
+- This function returns the number of pages that have been read from disk since a buffer pool has been initialized.
+This is implemented as below:
+-
+
 #### getNumWriteIO():
+- This function returns the number of pages written to the page file since the buffer pool has been initialized.
+This is implemented as below:
+-
+
 
 
 
