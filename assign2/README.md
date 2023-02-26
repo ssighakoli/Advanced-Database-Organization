@@ -1,10 +1,4 @@
 ```diff
-- text in red
-+ text in green
-! text in orange
-# text in gray
-@@ text in purple (and bold)@@
-```
 
 # Assignment 2: BUFFER MANAGER
 
@@ -118,6 +112,6 @@ These functions return statistics about a buffer pool and its contents.<br>
 ##### This method is implemented as below:<br>
 - We have maintained a variable writeCount from the beginning. So we will return that 'writeCount' here.
 
-
+```
 
 
