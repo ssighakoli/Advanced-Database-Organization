@@ -43,7 +43,9 @@ These functions are used to pin pages, unpin pages, mark pages as dirty, and for
 
 #### 1.markDirty():
 
-#### 2.unpinPage():
+#### 2.pinPage():
+
+#### 3.unpinPage():
 - This function is used to unpin the page. 
 - The field pageNum is used for this purpose and the pin status of this page will be changed to 0.
 ##### This method is implemented as below:<br>
@@ -52,7 +54,7 @@ These functions are used to pin pages, unpin pages, mark pages as dirty, and for
 - The lock will now be released.
 - RC_OK is returned.
 
-#### 3.forcePage():
+#### 4.forcePage():
 - This function is used to write the current content of the page back to the page file on disk.<br>
 ##### This method is implemented as below:<br>
 - Initially a mutex lock is attained.
@@ -62,7 +64,7 @@ These functions are used to pin pages, unpin pages, mark pages as dirty, and for
 - RC_OK is returned.
 
 
-#### 4.pinPage():
+
 
 
 ### STATISTICS FUNCTIONS:
