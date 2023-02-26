@@ -34,16 +34,16 @@ In a database system, the buffer pool is used to cache frequently accessed data 
 
 ### BUFFER POOL FUNCTIONS:
 
-#### initBufferPool():
-#### shutdownBufferPool():
-#### forceFlushPool():
+#### 1.initBufferPool():
+#### 2.shutdownBufferPool():
+#### 3.forceFlushPool():
 
 ### PAGE MANAGEMENT FUNCTIONS:
 These functions are used to pin pages, unpin pages, mark pages as dirty, and force a page back to disk.<br>
 
-#### markDirty():
+#### 1.markDirty():
 
-#### unpinPage():
+#### 2.unpinPage():
 - This function is used to unpin the page. 
 - The field pageNum is used for this purpose and the pin status of this page will be changed to 0.
 ##### This method is implemented as below:<br>
@@ -52,7 +52,7 @@ These functions are used to pin pages, unpin pages, mark pages as dirty, and for
 - The lock will now be released.
 - RC_OK is returned.
 
-#### forcePage():
+#### 3.forcePage():
 - This function is used to write the current content of the page back to the page file on disk.<br>
 ##### This method is implemented as below:<br>
 - Initially a mutex lock is attained.
@@ -62,13 +62,13 @@ These functions are used to pin pages, unpin pages, mark pages as dirty, and for
 - RC_OK is returned.
 
 
-#### pinPage():
+#### 4.pinPage():
 
 
 ### STATISTICS FUNCTIONS:
 These functions return statistics about a buffer pool and its contents.<br>
 
-#### getFrameContents():
+#### 1.getFrameContents():
 - This function returns an array of PageNumbers (of size numPages) where the ith element is the number of the page stored in the ith page frame. <br>
 - An empty page frame is represented using the constant NO_PAGE. <br>
 ##### This method is implemented as below:<br>
@@ -78,7 +78,7 @@ These functions return statistics about a buffer pool and its contents.<br>
 - The lock will now be released.
 - Page numbers array is returned.
 
-#### getDirtyFlags():
+#### 2.getDirtyFlags():
 - This function returns an array of bools (of size numPages) where the ith element is TRUE if the page stored in the ith page frame is dirty. <br>
 - Empty page frames are considered as clean. <br>
 ##### This method is implemented as below:<br>
@@ -88,7 +88,7 @@ These functions return statistics about a buffer pool and its contents.<br>
 - The lock will now be released.
 - Dirty bits array is returned.
 
-#### getFixCounts():
+#### 3.getFixCounts():
 - This function returns an array of ints (of size numPages) where the ith element is the fix count of the page stored in the ith page frame. <br>
 - Return 0 for empty page frames<br>
 ##### This method is implemented as below:<br>
@@ -98,12 +98,12 @@ These functions return statistics about a buffer pool and its contents.<br>
 - The lock will now be released.
 - Fix counts array is returned.
 
-#### getNumReadIO():
+#### 4.getNumReadIO():
 - This function returns the number of pages that have been read from disk since a buffer pool has been initialized.<br>
 ##### This method is implemented as below:<br>
 - We have maintained a variable readCount from the beginning. So we will return that 'readCount' here.
 
-#### getNumWriteIO():
+#### 5.getNumWriteIO():
 - This function returns the number of pages written to the page file since the buffer pool has been initialized.<br>
 ##### This method is implemented as below:<br>
 - We have maintained a variable writeCount from the beginning. So we will return that 'writeCount' here.
