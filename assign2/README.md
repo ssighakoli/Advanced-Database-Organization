@@ -1,7 +1,7 @@
 # Assignment 2: BUFFER MANAGER
 
 - The goal of this assignment is to implement a simple buffer manager - which manages a fixed number of pages in memory that represent pages from a page file managed by the storage manager implemented in the previous assignment. <br>
-- The Buffer manager should be able to handle more than one open buffer pool at the same time. However, there can only be one buffer pool for each page file. <br>
+- The Buffer manager should be able to handle more than one open buffer pool at the same time. <br>
 - It uses one page replacement strategy whenever the buffer pool is initialized.
 
 ## What is a buffer pool?
@@ -25,69 +25,88 @@ In a database system, the buffer pool is used to cache frequently accessed data 
 11. Use the command 'make run_test_additional' to run the additional test case.
 
 
-
 ## Additional functionality included for extra credit:
 
-- We made sure that all the buffer pool functions are thread safe.
+- We made sure that all the buffer pool functions are thread safe using pthread_mutex_lock and pthread_mutex_unlock.
 - In addition to the two minimum page replacement strategies FIFO and LRU, we have also implemented CLOCK, LFU and LFU_K.
 
 ## SOLUTION DESCRIPTION:
 
-### Buffer pool functions:
+### BUFFER POOL FUNCTIONS:
 
 #### initBufferPool():
 #### shutdownBufferPool():
 #### forceFlushPool():
 
-### Page Management functions:
-These functions are used pin pages, unpin pages, mark pages as dirty, and force a page back to disk.<br>
+### PAGE MANAGEMENT FUNCTIONS:
+These functions are used to pin pages, unpin pages, mark pages as dirty, and force a page back to disk.<br>
 
 #### markDirty():
 
 #### unpinPage():
 - This function is used to unpin the page. 
 - The field pageNum is used for this purpose and the pin status of this page will be changed to 0.
-This is implemented as below:<br>
--
+This method is implemented as below:<br>
+- Initially a mutex lock is attained.
+- We iterate through the buffer pool; if page is found: set the pinStatus of the page to 0 and decrease the fixCount. If the fix count is negative, set it to 0.
+- The lock will now be released.
+- RC_OK is returned.
 
 #### forcePage():
 - This function is used to write the current content of the page back to the page file on disk.<br>
-This is implemented as below:<br>
--
+This method is implemented as below:<br>
+- Initially a mutex lock is attained.
+- We iterate through the buffer pool; if page is found: we open the page and write it back to the disk using 'openPageFile' and 'writeBlock'methods of SM_FileHandle we implemented as part of assignment-1.
+- After writing the page back to disk, we set dirty bit to 0. 
+- The lock will now be released.
+- RC_OK is returned.
+
 
 #### pinPage():
 
 
-### Statistics functions:
+### STATISTICS FUNCTIONS:
 These functions return statistics about a buffer pool and its contents.<br>
 
 #### getFrameContents():
 - This function returns an array of PageNumbers (of size numPages) where the ith element is the number of the page stored in the ith page frame. <br>
 - An empty page frame is represented using the constant NO_PAGE. <br>
-This is implemented as below: <br>
--
+This method is implemented as below:<br>
+- Initially a mutex lock is attained.
+- We allocate the memory for pageNumbers array using malloc function.
+- We iterate through the buffer pool; if the pageNum is not -1 we return the page umber; else we will return a constant NO_PAGE.
+- The lock will now be released.
+- Page numbers array is returned.
 
 #### getDirtyFlags():
 - This function returns an array of bools (of size numPages) where the ith element is TRUE if the page stored in the ith page frame is dirty. <br>
 - Empty page frames are considered as clean. <br>
-This is implemented as below: <br>
--
+This method is implemented as below:<br>
+- Initially a mutex lock is attained.
+- We allocate the memory for dirtyBits array of boolean using malloc function.
+- We iterate through the buffer pool; if the dirty bit is 1, we return 0; else we will return false.
+- The lock will now be released.
+- Dirty bits array is returned.
 
 #### getFixCounts():
 - This function returns an array of ints (of size numPages) where the ith element is the fix count of the page stored in the ith page frame. <br>
 - Return 0 for empty page frames<br>
-This is implemented as below:<br>
--
+This method is implemented as below:<br>
+- Initially a mutex lock is attained.
+- We allocate the memory for fixCounts array of integers using calloc function.
+- We iterate through the buffer pool; if the fix count is -1, we return 0; else we will return the fixCount.
+- The lock will now be released.
+- Fix counts array is returned.
 
 #### getNumReadIO():
 - This function returns the number of pages that have been read from disk since a buffer pool has been initialized.<br>
-This is implemented as below:<br>
--
+This method is implemented as below:<br>
+- We have maintained a variable readCount from the beginning. So we will return that 'readCount' here.
 
 #### getNumWriteIO():
 - This function returns the number of pages written to the page file since the buffer pool has been initialized.<br>
-This is implemented as below:<br>
--
+This method is implemented as below:<br>
+- We have maintained a variable writeCount from the beginning. So we will return that 'writeCount' here.
 
 
 
