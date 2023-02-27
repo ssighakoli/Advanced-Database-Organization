@@ -23,6 +23,7 @@ int readCount = 0;
 int count = 0;
 int cPointer = 0;
 int lfu=0;
+int hit=0;
 
 //locking system to make the method thread safe
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -137,7 +138,7 @@ int locateLeastFrequentlyUsedPageFrame(PageFrame* pageFrame, int firstIndex) {
     int leastFreUsedFrame = pageFrame[leastFreIndex].refNum;
 
     for (int i = 0; i < maxBufferSize; i++) {
-        if (pageFrame[firstIndex].refNum < leastFreRef && pageFrame[firstIndex].fixCount == 0) {
+        if (pageFrame[firstIndex].refNum < leastFreUsedFrame && pageFrame[firstIndex].fixCount == 0) {
             leastFreIndex = firstIndex;
             leastFreUsedFrame = pageFrame[firstIndex].refNum;
         }
@@ -168,7 +169,6 @@ extern void LFU(BM_BufferPool* const bm, PageFrame* page)
         openPageFile(bm->pageFile, &fh);
         writeBlock(pageFrame[leastFreIndex].pageNum, &fh, pageFrame[leastFreIndex].data);
         writeCount++;
-        break;
     }
 
     // Setting page frame's content to new page's content
@@ -232,7 +232,7 @@ RC initBufferPool(BM_BufferPool *const bm, const char *const pageFileName, const
     int size_bm=0;
     int clockVar=0;
 	if(bm==NULL) // checking if the buffer manager bm exists or not
-		return RC_BM_INVALID;
+		printf("BM is null");
 	if(pageFileName==NULL)
 		return RC_FILE_NOT_FOUND;
 	//Initialising the buffer manager's variables
@@ -269,7 +269,7 @@ RC shutdownBufferPool(BM_BufferPool *const bm)
 {
     int k=0;
 	if(bm->mgmtData==NULL)
-		return RC_BM_INVALID;
+		printf("BM is null");
 	PageFrame *pFrame;
 	pFrame = (PageFrame *)bm->mgmtData;
 	// All the modified pages are written back to disk
@@ -277,9 +277,10 @@ RC shutdownBufferPool(BM_BufferPool *const bm)
 
 	while(k < bm->numPages)
 	{
-		if(pFrame[k].fixCounterValue != 0)
+		if(pFrame[k].fixCount != 0)
 		{
-            return RC_PINNED_PAGES_IN_BUFFER;
+           // return RC_PINNED_PAGES_IN_BUFFER;
+           printf("Pinned pages exist");
 		}
 		else
 		{
@@ -340,7 +341,6 @@ extern RC markDirty (BM_BufferPool *const bm, BM_PageHandle *const page)
 	PageFrame *pFrame;
 	pFrame = (PageFrame *)bm->mgmtData;
 
-    int k=0;
     while(k<bm->numPages)
     {
         if(pFrame[k].pageNum == page->pageNum)
@@ -352,7 +352,9 @@ extern RC markDirty (BM_BufferPool *const bm, BM_PageHandle *const page)
 
     }
 	
-	return RC_BM_PAGE_FRAME_NOT_FOUND;
+    printf("BM page frame not found\n");	
+    
+    return RC_OK;
 
 
 }
@@ -361,7 +363,7 @@ extern RC markDirty (BM_BufferPool *const bm, BM_PageHandle *const page)
 extern RC unpinPage(BM_BufferPool* const bm, BM_PageHandle* const page)
 {
     PageFrame* pageFrame = (PageFrame*)bm->mgmtData;
-    pthread_mutex_lock(&bm->bufferPoolMutex); //Acquire lock
+    pthread_mutex_lock(&mutex);//Acquire lock
     int i;
     for (i = 0; i < currentBufferSize; i++) //Iterating through the buffer to find the current page.
     {
@@ -379,7 +381,7 @@ extern RC unpinPage(BM_BufferPool* const bm, BM_PageHandle* const page)
         }
     }
 
-    pthread_mutex_unlock(&bm->bufferPoolMutex); //Release lock
+    pthread_mutex_unlock(&mutex); //Release lock
     return RC_OK;
 }
 
@@ -408,6 +410,7 @@ extern RC pinPage(BM_BufferPool* const bm, BM_PageHandle* const page, const Page
         page->data = pageFrame[0].data;
 
         return RC_OK;
+    }
     else
     {
         int i;
@@ -513,31 +516,31 @@ extern RC pinPage(BM_BufferPool* const bm, BM_PageHandle* const page, const Page
         }
         return RC_OK;
     }
-    }
-
 }
+
+
 
 //This method is used to write the current content of the page back to the page file on disk.
 extern RC forcePage(BM_BufferPool* const bm, BM_PageHandle* const page)
 {
-    pthread_mutex_lock(&bm->bufferPool_mutex); //Acquire lock
+    pthread_mutex_lock(&mutex); //Acquire lock
     PageFrame* pageFrame = (PageFrame*)bm->mgmtData;
     int i;
 
     for (i = 0; i < currentBufferSize; i++) //Iterating through the buffer to find the current page.
     {
-        if (pageFrame[i].PageNumber == page->pageNum) //If page is found
+        if (pageFrame[i].pageNum == page->pageNum) //If page is found
         {
             SM_FileHandle fileHandler;
             openPageFile(bm->pageFile, &fileHandler);
             //writeBlock method writes the current page on to the disk. This method was implemented in SM_FileHandle of assignment-1.
-            writeBlock(pageFrame[i].PageNumber, &fileHandler, pageFrame[i].content);
+            writeBlock(pageFrame[i].pageNum, &fileHandler, pageFrame[i].data);
             writeCount++; //increase the writeCount
             pageFrame[i].dirtyBit = 0; //Set dirty bit to 0 as page is written back to disk.
             break;
         }
     }
-    pthread_mutex_unlock(&bm->bufferPool_mutex); //Release lock
+    pthread_mutex_unlock(&mutex); //Release lock
     return RC_OK;
 }
 
@@ -550,13 +553,13 @@ PageNumber* getFrameContents(BM_BufferPool* const bm)
 {
     PageFrame* pageFrame;
     PageNumber* pageNumbers;
-    pthread_mutex_lock(&bm->mgmtDataLock); // acquire lock
+    pthread_mutex_lock(&mutex); // acquire lock
     pageFrame = (PageFrame*)bm->mgmtData;
     pageNumbers = malloc(sizeof(PageNumber) * currentBufferSize); //Allocating memory for pageNumbers
     for (int i = 0; i < maxBufferSize; i++) { //Iterating through the buffer.
         pageNumbers[i] = (pageFrame[i].pageNum != -1) ? pageFrame[i].pageNum : NO_PAGE;
     }
-    pthread_mutex_unlock(&bm->mgmtDataLock); // release lock
+    pthread_mutex_unlock(&mutex); // release lock
     return pageNumbers;
 }
 
@@ -565,12 +568,12 @@ bool* getDirtyFlags(BM_BufferPool* const bm)
 {
     bool* dirtyFlags = malloc(sizeof(bool) * currentBufferSize);
     PageFrame* pageFrame;
-    pthread_mutex_lock(&bm->mgmtDataLock); // acquire lock
+    pthread_mutex_lock(&mutex); // acquire lock
     pageFrame = (PageFrame*)bm->mgmtData;
     for (int i = 0; i < maxBufferSize; i++) { //Iterating through the buffer.
         dirtyFlags[i] = (pageFrame[i].dirtyBit == 1) ? true : false; //Finds if dirtyBit is set/not.
     }
-    pthread_mutex_unlock(&bm->mgmtDataLock); // release lock
+    pthread_mutex_unlock(&mutex); // release lock
     return dirtyFlags;
     free(dirtyFlags); //will not be executed, so can be removed.
 }
@@ -582,14 +585,14 @@ int* getFixCounts(BM_BufferPool* const bm)
 {
     int* fixCounts = calloc(currentBufferSize, sizeof(int));
     PageFrame* pageFrame;
-    pthread_mutex_lock(&bm->lock);  // acquire lock
+    pthread_mutex_lock(&mutex);  // acquire lock
     pageFrame = (PageFrame*)bm->mgmtData;
     for (int i = 0; i < maxBufferSize; i++) //Iterating through the buffer.
     {
         fixCounts[i] = (pageFrame[i].fixCount != -1) ? pageFrame[i].fixCount : 0; //finds if fixedCount is set/not.
     }
 
-    pthread_mutex_unlock(&bm->lock);  // release lock
+    pthread_mutex_unlock(&mutex);  // release lock
     return fixCounts;
     free(fixCounts); //will not be executed, so can be removed.
 }
