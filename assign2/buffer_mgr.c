@@ -22,6 +22,10 @@ int readCount = 0;
 //This index stores page count which are read from disk
 int count = 0;
 int cPointer = 0;
+int lfu=0;
+
+//locking system to make the method thread safe
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 typedef struct PageFrame
 {
@@ -32,12 +36,12 @@ typedef struct PageFrame
     int pinStatus; //Will be 1 if pinned, 0 if unpinned.
     int freeStat;
     int hitNum;
+    int refNum;
 } PageFrame;
 
 //Replacement strategies
-//locking system to make the method thread safe
 
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+
 //first in first out
 extern void FIFO(BM_BufferPool* const bm, PageFrame* page)
 {
@@ -78,8 +82,6 @@ extern void FIFO(BM_BufferPool* const bm, PageFrame* page)
 
     pthread_mutex_unlock(&mutex); //release lock
 }
-
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 //  Least Recently Used strategy
 extern void LRU(BM_BufferPool* const bm, PageFrame* page)
@@ -128,12 +130,30 @@ extern void LRU(BM_BufferPool* const bm, PageFrame* page)
 
     pthread_mutex_unlock(&mutex);// release lock
 }
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+
+// Function to find the least frequently used page frame
+int locateLeastFrequentlyUsedPageFrame(PageFrame* pageFrame, int firstIndex) {
+    int leastFreIndex = firstIndex;
+    int leastFreUsedFrame = pageFrame[leastFreIndex].refNum;
+
+    for (int i = 0; i < maxBufferSize; i++) {
+        if (pageFrame[firstIndex].refNum < leastFreRef && pageFrame[firstIndex].fixCount == 0) {
+            leastFreIndex = firstIndex;
+            leastFreUsedFrame = pageFrame[firstIndex].refNum;
+        }
+        firstIndex = (firstIndex + 1) % maxBufferSize;
+    }
+
+    return leastFreIndex;
+    pthread_mutex_unlock(&mutex);//release lock
+}
+
 // Least Frequently Used
 extern void LFU(BM_BufferPool* const bm, PageFrame* page)
 {
 
     pthread_mutex_lock(&mutex);
+    SM_FileHandle fh;
 
     PageFrame* pageFrame = (PageFrame*)bm->mgmtData;
 
@@ -144,14 +164,10 @@ extern void LFU(BM_BufferPool* const bm, PageFrame* page)
     leastFreIndex = locateLeastFrequentlyUsedPageFrame(pageFrame, leastFreIndex);
 
     // If page in memory has been modified (dirtyBit == 1), then write page to disk
-    switch (pageFrame[leastFreIndex].dirtyBit) {
-    case 1:
-        SM_FileHandle fh;
+    if (pageFrame[leastFreIndex].dirtyBit == 1) {
         openPageFile(bm->pageFile, &fh);
         writeBlock(pageFrame[leastFreIndex].pageNum, &fh, pageFrame[leastFreIndex].data);
         writeCount++;
-        break;
-    default:
         break;
     }
 
@@ -163,25 +179,9 @@ extern void LFU(BM_BufferPool* const bm, PageFrame* page)
     lfu = leastFreIndex + 1;
 }
 
-// Function to find the least frequently used page frame
-int locateLeastFrequentlyUsedPageFrame(PageFrame* pageFrame, int firstIndex) {
-    int leastFreIndex = firstIndex;
-    int leastFreUsedFrame = pageFrame[leastFreIndex].refNum;
 
-    for (int i = 0; i < maxBufferSize; i++) {
-        if (pageFrame[firstIndex].refNum < leastFreqRef && pageFrame[firstIndex].fixCount == 0) {
-            leastFreIndex = firstIndex;
-            leastFreUsedFrame = pageFrame[firstIndex].refNum;
-        }
-        firstIndex = (firstIndex + 1) % maxBufferSize;
-    }
-
-    return leastFreIndex;
-    pthread_mutex_unlock(&mutex);//release lock
-}
 
 //  CLOCK 
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 extern void CLOCK(BM_BufferPool* const bm, PageFrame* page)
 {
     pthread_mutex_lock(&mutex);
@@ -229,6 +229,8 @@ extern void CLOCK(BM_BufferPool* const bm, PageFrame* page)
 RC initBufferPool(BM_BufferPool *const bm, const char *const pageFileName, const int numPages, ReplacementStrategy strategy, void *stratData)
 {
     int k=0;
+    int size_bm=0;
+    int clockVar=0;
 	if(bm==NULL) // checking if the buffer manager bm exists or not
 		return RC_BM_INVALID;
 	if(pageFileName==NULL)
@@ -243,10 +245,9 @@ RC initBufferPool(BM_BufferPool *const bm, const char *const pageFileName, const
 
 	//Setting values for  buffer pool variables
 	size_bm = numPages;	
-	writeCountValue = 0;
+	writeCount = 0;
 	clockVar = 0;
-	// Check if all pages fields are equal to NULL / 0
-    int k=0;
+	// Check if all pages fields are equal to NULL 
     while(k<size_bm)
     {
         pg[k].data=NULL;
@@ -303,7 +304,7 @@ RC forceFlushPool(BM_BufferPool *const bm)
 	pFrame = (PageFrame *)bm->mgmtData;
 	int i;
 	if(bm->mgmtData==NULL)
-		return RC_BM_INVALID;
+		printf("BM is invalid");
     int k=0;
     while (k<bm->numPages)
     {
@@ -314,7 +315,7 @@ RC forceFlushPool(BM_BufferPool *const bm)
             ensureCapacity(pFrame[k].pageNum, &fhandle);
             writeBlock(pFrame[k].pageNum, &fhandle, pFrame[k].data);
             pFrame[k].dirtyBit=0;
-            writeCountValue++;
+            writeCount++;
 
         }
         else{
