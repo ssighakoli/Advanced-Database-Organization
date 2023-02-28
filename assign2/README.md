@@ -69,6 +69,9 @@ A new buffer pool is creatd for a page file that already exists on disk. Here, w
 These functions are used to pin pages, unpin pages, mark pages as dirty, and force a page back to disk.<br>
 
 #### 1.markDirty():
+- This function is used to set the specified page frame's dirtyBit to 1.
+- By repeatedly checking each page in the buffer pool, it locates the page frame using pageNum.
+- When found, it sets dirtyBit = 1 for that page.
 
 #### 2.pinPage():
 
