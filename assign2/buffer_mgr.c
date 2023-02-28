@@ -19,9 +19,6 @@ int writeCount = 0;
 //This variable keeps track of the number of reads from the disk.
 int readCount = 0;
 
-//Indicates if the buffer is full/not
-bool isCurrentBufferFull = false;
-
 //locking system to make the method thread safe
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -36,7 +33,7 @@ typedef struct PageFrame
     int hitCount; //Will be incremented for every hit.
 } PageFrame;
 
-int frontIndexOfQueue=0;
+
 int rearIndexOfQueue=0;
 
 //Returns the index of the frame to be evicted using CLOCK strategy.
@@ -49,7 +46,7 @@ extern void FIFO_PageReplacementStrategy(BM_BufferPool *const bm, PageFrame *pag
     printf("In FIFO page replacement strategy..START\n");
     PageFrame *pageFrame = (PageFrame *) bm->mgmtData;
     
-    int i;
+    int frontIndexOfQueue,i;
 
     frontIndexOfQueue = rearIndexOfQueue % currentBufferSize;
 
@@ -59,9 +56,13 @@ extern void FIFO_PageReplacementStrategy(BM_BufferPool *const bm, PageFrame *pag
 		{
                    if(pageFrame[frontIndexOfQueue].dirtyBit == 1)
                    {
-		      SM_FileHandle fileHandler;	   
+                      printf("In FIFO page replacement strategy..Found dirty bit..Current buffer size: %d\n",currentBufferSize);
+                      
+		              SM_FileHandle fileHandler;	   
                       openPageFile(bm->pageFile, &fileHandler);
-		      writeBlock(pageFrame[frontIndexOfQueue].pageNum, &fileHandler, pageFrame[frontIndexOfQueue].data);
+                      printf("In FIFO page replacement strategy..Found dirty bit, front index %d\n",frontIndexOfQueue);
+                      printf("In FIFO page replacement strategy..Found dirty bit, writing to disk: %s\n",pageFrame[frontIndexOfQueue].data);
+		              writeBlock(pageFrame[frontIndexOfQueue].pageNum, &fileHandler, pageFrame[frontIndexOfQueue].data);
                       writeCount++;
                    }
 			    pageFrame[frontIndexOfQueue].data = page->data;
@@ -75,6 +76,7 @@ extern void FIFO_PageReplacementStrategy(BM_BufferPool *const bm, PageFrame *pag
 			    frontIndexOfQueue = (frontIndexOfQueue% currentBufferSize == 0) ? 0 : frontIndexOfQueue;
             }
         }
+    printf("In FIFO page replacement strategy..Found dirty bit, front index %d\n",frontIndexOfQueue);    
     printf("In FIFO page replacement strategy..END\n");
 }
 
@@ -157,8 +159,6 @@ RC initBufferPool(BM_BufferPool *const bm, const char *const pageFileName, const
 	writeCount = 0;
     currentBufferSize = numPages;
     maxBufferSize = numPages;
-    isCurrentBufferFull = false;
-    frontIndexOfQueue = rearIndexOfQueue  = 0;
 	// Check if all pages fields are equal to NULL 
     for(k = 0; k < currentBufferSize; k++)
 	{
@@ -217,7 +217,7 @@ RC shutdownBufferPool(BM_BufferPool *const bm)
 //This method is used to write all dirty pages from buffer pool to disk.
 RC forceFlushPool(BM_BufferPool *const bm)
 {
-        printf("forceFlushPool: Start\n");
+    printf("forceFlushPool: Start\n");
 	pthread_mutex_unlock(&mutex);
 	pthread_mutex_lock(&mutex);//Acquire lock
 	
@@ -232,11 +232,13 @@ RC forceFlushPool(BM_BufferPool *const bm)
 	{
         if(pFrame[k].fixCount==0 && pFrame[k].dirtyBit==1)
         {
-	    SM_FileHandle fhandle;
+	    printf("forceFlushPool: Writing modified pages to disk:\n");	
+	    SM_FileHandle fileHandler;
             // Writing modified pages to disk
-            openPageFile(bm->pageFile, &fhandle);
+            openPageFile(bm->pageFile, &fileHandler);
             //ensureCapacity(pFrame[k].pageNum, &fhandle);
-            writeBlock(pFrame[k].pageNum, &fhandle, pFrame[k].data);
+	    printf("forceFlushPool: Writing modified pages to disk: Data: %s\n",pFrame[k].data);	
+            writeBlock(pFrame[k].pageNum, &fileHandler, pFrame[k].data);
             pFrame[k].dirtyBit=0;
             writeCount++;
         }
@@ -254,7 +256,6 @@ RC forceFlushPool(BM_BufferPool *const bm)
 //This method is used to mark a page frame as dirty.
 extern RC markDirty (BM_BufferPool *const bm, BM_PageHandle *const page)
 {
-    printf("markDirty: Start\n");
     pthread_mutex_unlock(&mutex);	
     pthread_mutex_lock(&mutex);//Acquire lock
     int k=0;
@@ -274,9 +275,7 @@ extern RC markDirty (BM_BufferPool *const bm, BM_PageHandle *const page)
 
     //return RC_BM_PAGE_FRAME_NOT_FOUND;
 	
-    printf("BM page frame not found\n");	
     pthread_mutex_unlock(&mutex);
-    printf("markDirty: End\n");
     return RC_OK;
 
 
@@ -285,7 +284,6 @@ extern RC markDirty (BM_BufferPool *const bm, BM_PageHandle *const page)
 //This method is used to unpin the page.
 extern RC unpinPage(BM_BufferPool* const bm, BM_PageHandle* const page)
 {
-      printf("unpinPage: start\n");
     PageFrame* pageFrame = (PageFrame*)bm->mgmtData;
         pthread_mutex_unlock(&mutex); 
 	pthread_mutex_lock(&mutex);//Acquire lock
@@ -294,6 +292,7 @@ extern RC unpinPage(BM_BufferPool* const bm, BM_PageHandle* const page)
     {
         if (pageFrame[i].pageNum == page->pageNum) //If the given page's pageNum matches with that of current page
         {
+            printf("unpinPage: page found to unpin with page number: %d\n",page->pageNum);
             pageFrame[i].pinStatus = 0;
             pageFrame[i].fixCount--;
 	    break;		
@@ -301,7 +300,6 @@ extern RC unpinPage(BM_BufferPool* const bm, BM_PageHandle* const page)
     }
 
     pthread_mutex_unlock(&mutex); //Release lock
-    printf("unpinPage: end\n");
     return RC_OK;
 }
 
@@ -309,7 +307,7 @@ extern RC unpinPage(BM_BufferPool* const bm, BM_PageHandle* const page)
 //This method is used to pin the page with pagenumber pageNum.
 extern RC pinPage (BM_BufferPool *const bm, BM_PageHandle *const page, const PageNumber pageNum) 
 {
-    printf("In pin page method: \n");
+    printf("In pin page method for Page number: %d\n",pageNum);
    
     PageFrame *pageFrame = (PageFrame *)bm->mgmtData;
 
@@ -336,28 +334,33 @@ extern RC pinPage (BM_BufferPool *const bm, BM_PageHandle *const page, const Pag
     else
     {
         printf("In firse else block!\n");
-        int i,k;
-        isCurrentBufferFull = true;
+        int i;
+        bool isCurrentBufferFull = true;
         for(i = 0; i < currentBufferSize; i++)
 		{
+		if(pageFrame[i].pageNum != -1)
+		  {
             if(pageFrame[i].pageNum == pageNum) //Meaning, its a hit
 			{
                 printf("In Else - if block!\n");
                 pageFrame[i].fixCount++;
-				isCurrentBufferFull = false;
+			    isCurrentBufferFull = false;
                 pageFrame[i].hitCount = pageFrame[i].hitCount + 1; 
                 page->pageNum = pageNum;
-				page->data = pageFrame[i].data;
+		        page->data = pageFrame[i].data;
                 printf("In Else - if block: page data is: %s\n", page->data); 
                 break;
             }
-            else //Meaning, it is not a hit and page needs to be read from disk
+		 }else //Meaning, it is not a hit and page needs to be read from disk
             {
                 SM_FileHandle fileHandler;
                 printf("In Else - else block!\n");
 				openPageFile(bm->pageFile, &fileHandler);
 				pageFrame[i].data = (SM_PageHandle) malloc (PAGE_SIZE);
+                printf("In else - else block: page frame data before readBlock is: %s\n", pageFrame[i].data);
+                printf("In else - else block: page pageNum before readBlock is: %d\n", pageNum);
 				readBlock(pageNum, &fileHandler, pageFrame[i].data);
+				printf("In else - else block: page frame data after readBlock is: %s\n", pageFrame[i].data);
 				pageFrame[i].pageNum = pageNum;
 				pageFrame[i].fixCount = 1;
 				pageFrame[i].hitCount = pageFrame[i].hitCount + 1;
@@ -365,20 +368,23 @@ extern RC pinPage (BM_BufferPool *const bm, BM_PageHandle *const page, const Pag
 				page->pageNum = pageNum;
 				page->data = pageFrame[i].data;
 				isCurrentBufferFull = false;
+                printf ("i value is: %d\n",i);
+                printf("In else - else block: page frame data is: %s\n", pageFrame[i].data);
+                printf("In else - else block: page number is: %d\n", page->pageNum);  
                 printf("In else - else block: page data is: %s\n", page->data); 
 				break;
 			}
 
         }
 
-        if(isCurrentBufferFull) //means that the current buffer is full and we must replace any existing page using any of the page replacement strategy
+        if(isCurrentBufferFull == true) //means that the current buffer is full and we must replace any existing page using any of the page replacement strategy
         {
         printf("In isCurrentBufferFull block!\n");
            PageFrame *newPageToBeWritten = (PageFrame *) malloc(sizeof(PageFrame));		
-		   SM_FileHandle fileHanlder;
-			openPageFile(bm->pageFile, &fileHanlder);
+		   SM_FileHandle fileHandler;
+			openPageFile(bm->pageFile, &fileHandler);
 			newPageToBeWritten->data = (SM_PageHandle) malloc(PAGE_SIZE);
-			readBlock(pageNum, &fileHanlder, newPageToBeWritten->data);
+			readBlock(pageNum, &fileHandler, newPageToBeWritten->data);
 			newPageToBeWritten->pageNum = pageNum;
 			newPageToBeWritten->dirtyBit = 0;		
 			newPageToBeWritten->fixCount = 1;
