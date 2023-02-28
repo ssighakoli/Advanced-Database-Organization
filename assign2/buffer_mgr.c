@@ -372,6 +372,7 @@ extern RC pinPage (BM_BufferPool *const bm, BM_PageHandle *const page, const Pag
         }
 
         if(isCurrentBufferFull == true) //means that the current buffer is full 
+	{
         printf("In isCurrentBufferFull block!\n");
            PageFrame *newPageToBeWritten = (PageFrame *) malloc(sizeof(PageFrame));		
 		   SM_FileHandle fileHandler;
