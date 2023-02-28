@@ -30,7 +30,6 @@ In a database system, the buffer pool is used to cache frequently accessed data 
 ## Additional functionality included for extra credit:
 
 - We made sure that all the buffer pool functions are thread safe using pthread_mutex_lock and pthread_mutex_unlock.
-- In addition to the two minimum page replacement strategies FIFO and LRU, we have also implemented CLOCK, LFU and LFU_K.
 
 ## SOLUTION DESCRIPTION:
 
