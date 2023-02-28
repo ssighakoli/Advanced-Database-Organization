@@ -2,6 +2,7 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
+#include<sys/stat.h>
 #include "storage_mgr.h"
 
 FILE *filePointer;
@@ -25,13 +26,14 @@ extern RC createPageFile (char *fileName){
     filePointer=fopen(fileName, "w+"); 
 	
 	//Using calloc function for memory allocation   
-	newPageHandle = (SM_PageHandle)calloc(PAGE_SIZE,sizeof(char));
-    
+	
     //To check if the file is opened successfully
     if (filePointer!= NULL){
         //memset(memory,'\0',PAGE_SIZE); // using memset() fun fill the memeory allocated in previuos step with '\0' bytes
+        newPageHandle = (SM_PageHandle)calloc(PAGE_SIZE,sizeof(char));
         int write=fwrite(newPageHandle,sizeof(char),PAGE_SIZE,filePointer);
-        
+        printf("Create page file: %d\n",write);
+        printf("PAGE SIZE: %d\n",PAGE_SIZE);
         // checks if file write operation is successful or not
         if (write < PAGE_SIZE){
             printf("\n Page limit exceeded\n");
@@ -54,15 +56,16 @@ extern RC createPageFile (char *fileName){
 extern RC openPageFile (char *fileName, SM_FileHandle *fHandle)
 {
     // Opening the file in read and write mode
-    filePointer = fopen(fileName,"r+"); 
+    filePointer = fopen(fileName,"r"); 
 	int size_of_the_file, pages_in_Total;
     
     // Checking whether the file is opened or not
-    if (filePointer!= 0)
+    if (filePointer!= NULL)
     {
-    	printf("Setting the pointer to the end of the file");
+        printf("openPageFile: Inside if: file found: %s\n",fileName);
+    	//printf("Setting the pointer to the end of the file");
     	// Moving the pointer to the end of the file
-        fseek(filePointer,0,SEEK_END); 
+        //fseek(filePointer,0,SEEK_END); 
 
         // ftell() returns the size of the file after moving the pointer to the end of the file      
         size_of_the_file = ftell(filePointer);
@@ -76,19 +79,26 @@ extern RC openPageFile (char *fileName, SM_FileHandle *fHandle)
 
         //Initializing rest of the parameters of the file handle
 
-        fHandle->totalNumPages = pages_in_Total;
+       // fHandle->totalNumPages = pages_in_Total;
+
+        struct stat fileInfo;
+		if(fstat(fileno(filePointer), &fileInfo) < 0)    
+			printf("error!");
+		fHandle->totalNumPages = fileInfo.st_size/ PAGE_SIZE;
         
         //Setting current page position to zero
         fHandle->curPagePos = 0;
         fHandle->mgmtInfo = filePointer;
-
+        printf("openPageFile: fHandle->totalNumPages: %d \n",fHandle->totalNumPages);
         // Set the file pointer to the beginning of the file
-        fseek(filePointer,0,SEEK_SET); 
+        //fseek(filePointer,0,SEEK_SET);
+        fclose(filePointer);
         return RC_OK;
     }
     //if the file is not found
     else{
-       
+         printf("openPageFile: file not found: %s\n",fileName);
+         printf("openPageFile: fHandle->totalNumPages: %d \n",fHandle->totalNumPages);
         return RC_FILE_NOT_FOUND;
     }
 
@@ -111,6 +121,7 @@ extern RC closePageFile (SM_FileHandle *fHandle)
 //This method destroys the file page.
 extern RC destroyPageFile (char *fileName)
 {
+    printf("-------In destroyPageFile------\n");
     //Using fopen to check whether file exists or not
     filePointer=fopen(fileName,"r+"); 
 
@@ -134,24 +145,27 @@ extern RC destroyPageFile (char *fileName)
 //This method reads the block at given position pageNum from a file and stores its content in the memory pointed to by the memPage page handle.
 extern RC readBlock (int pageNum, SM_FileHandle *fHandle, SM_PageHandle memPage)
 {
-
+    printf("In read block method:\n");
     //Opening the file in READ mode
     filePointer = fopen(fHandle->fileName, "r");
 	
     //To check if the file is opened successfully
     if(filePointer == NULL){
+	printf("In read block method: File cannot be opened/does not exsit\n"); 
         RC_message = "File cannot be opened/does not exsit";
         return RC_FILE_NOT_FOUND;
     }
 
    //Checking if file handler is initialized. 
     if (fHandle == NULL){
+	printf("In read block method: File handler is not initialized\n");    
         RC_message = "File handler is not initialized";
         return RC_FILE_HANDLE_NOT_INIT;
     }
     
     //If the file has less than pageNum pages, the method should return RC_READ_NON_EXISTING_PAGE.
-    if (fHandle->totalNumPages < pageNum) {
+    if (fHandle->totalNumPages < pageNum || pageNum < 0)  {
+	printf("In read block method: Requested page does not exist\n");    
         RC_message = "Requested page does not exist.";
         return RC_READ_NON_EXISTING_PAGE;
     }
@@ -163,14 +177,17 @@ extern RC readBlock (int pageNum, SM_FileHandle *fHandle, SM_PageHandle memPage)
         perror("Seek Failed!");
     }
     else{
+	printf("In read block method: Seek success\n");
         //Read the content and store it in the location pointed out by memPage page handle.
         fread(memPage, sizeof(char), PAGE_SIZE, filePointer);
         // Set the current page position to the pointer
-	      fHandle->curPagePos = pageNum;
+	    fHandle->curPagePos = ftell(filePointer);
+        printf("In read block method: Current page position: %d\n",fHandle->curPagePos);
     }
 
     // Closing the file stream    	
-    fclose(filePointer);	
+    fclose(filePointer);
+    printf("In read block method: End\n");
     return RC_OK;		
 }
 
@@ -246,17 +263,18 @@ extern RC readLastBlock (SM_FileHandle *fHandle, SM_PageHandle memPage)
 
 //This method writes page to disk using absolute position.
 extern RC writeBlock (int pageNum, SM_FileHandle *fHandle, SM_PageHandle memPage){
-    
+    printf("In write block...pagenum: %d\n",pageNum);
+    printf("In write block...fHandle->totalNumPages: %d\n",fHandle->totalNumPages);
     //Checking if file handler is initialized
     if (fHandle == NULL || fHandle->fileName == NULL) {
         return RC_FILE_HANDLE_NOT_INIT;
     }
     //Check the existance of the pagenum if it is within the range.
-    if (pageNum < 0 || pageNum >= fHandle->totalNumPages) {
+    if (pageNum < 0 || pageNum > fHandle->totalNumPages) {
         return RC_READ_NON_EXISTING_PAGE;
     }
     //Openening the file in WRITE mode with roles->r+b
-    filePointer = fopen(fHandle->fileName, "r+b");
+    filePointer = fopen(fHandle->fileName, "r+");
     if (filePointer == NULL) {
         return RC_FILE_NOT_FOUND;
     }
@@ -273,7 +291,7 @@ extern RC writeBlock (int pageNum, SM_FileHandle *fHandle, SM_PageHandle memPage
 
     //update the current page information 
     fHandle->curPagePos = pageNum;
-
+    printf("In write block...fHandle->curPagePos: %d\n",fHandle->curPagePos);
     // Close the file after writing your information
     fclose(filePointer);
 
@@ -306,11 +324,17 @@ extern RC appendEmptyBlock (SM_FileHandle *fHandle){
        perror("Memory allocation failed.");
     }
     
+    int isSeekSuccess = fseek(filePointer, 0, SEEK_END);
     //This will help append an empty block if its empty. 
-    fwrite(newEmptyPage, sizeof(char), PAGE_SIZE, filePointer);
-    fHandle->totalNumPages++;
+    if(isSeekSuccess == 0 ) {
+            fwrite(newEmptyPage, sizeof(char), PAGE_SIZE, filePointer);
+    }
+    else{
+        free(newEmptyPage);;
+    }
     free(newEmptyPage);
-    fclose(filePointer);
+    fHandle->totalNumPages++;
+    printf("In appendEmptyBlock method: File Handle total Number of pages: %d \n",fHandle->totalNumPages);	
     return RC_OK;
 
 }
@@ -318,14 +342,16 @@ extern RC appendEmptyBlock (SM_FileHandle *fHandle){
 
 //This method ensures the capacity of the file. If the file has less than numberOfPages mentioned, then it increases the size to numberOfPages.
 extern RC ensureCapacity (int numberOfPages, SM_FileHandle *fHandle){
-    
+    printf("In ensureCapacity method:\n");
+    printf("In ensureCapacity method: Number of pages: %d \n",numberOfPages);
+    printf("In ensureCapacity method: File Handle total Number of pages: %d \n",fHandle->totalNumPages);	
     //Making sure more pages are added if insufficient
-    int requiredPagesAdded = numberOfPages - (fHandle->totalNumPages);
-    if (requiredPagesAdded > 0) {
-        for (int i = 0; i < requiredPagesAdded; i++){
+    //int requiredPagesAdded = numberOfPages - (fHandle->totalNumPages);
+   while(numberOfPages > fHandle->totalNumPages ) {
+             printf("In ensureCapacity method: while loop success\n");
             appendEmptyBlock(fHandle);
-        }
     }
+    printf("In ensureCapacity method: END\n");
     return RC_OK;
 
 }
