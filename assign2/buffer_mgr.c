@@ -301,7 +301,8 @@ extern RC unpinPage(BM_BufferPool* const bm, BM_PageHandle* const page)
 //This method is used to pin the page.
 extern RC pinPage (BM_BufferPool *const bm, BM_PageHandle *const page, const PageNumber pageNum) 
 {
-    PageFrame *pageFrameToPin = (PageFrame *)bm->mgmtData;
+    PageFrame *pageFrameToPin;
+    pageFrameToPin= (PageFrame *)bm->mgmtData;
     pthread_mutex_unlock(&mutex); 
 	pthread_mutex_lock(&mutex);//Acquire lock
     //checking the page to be written is the first page.
@@ -374,7 +375,8 @@ extern RC pinPage (BM_BufferPool *const bm, BM_PageHandle *const page, const Pag
         if(isCurrentBufferFull == true) //means that the current buffer is full 
 	{
         printf("In isCurrentBufferFull block!\n");
-           PageFrame *newPageToBeWritten = (PageFrame *) malloc(sizeof(PageFrame));		
+		int sizeOfFrame = sizeof(PageFrame);
+           PageFrame *newPageToBeWritten = (PageFrame *) malloc(sizeOfFrame);		
 		   SM_FileHandle fileHandler;
 			openPageFile(bm->pageFile, &fileHandler);
 			newPageToBeWritten->pageContent = (SM_PageHandle) malloc(PAGE_SIZE);
@@ -390,7 +392,8 @@ extern RC pinPage (BM_BufferPool *const bm, BM_PageHandle *const page, const Pag
            		
 
 			// Call appropriate page replacement alg
-			switch(bm->strategy)
+		       ReplacementStrategy strategy = bm->strategy;
+			switch(strategy)
 			{			
 				case RS_FIFO: 
 					FIFO_PageReplacementStrategy(bm, newPageToBeWritten);
@@ -465,7 +468,8 @@ PageNumber* getFrameContents(BM_BufferPool* const bm)
 //This method returns an array of bools if dirty
 bool* getDirtyFlags(BM_BufferPool* const bm)
 {
-    bool* dirtyFlags = malloc(sizeof(bool) * currentBufferSize);
+    int sizeOfDirtyFrame = sizeof(bool) * currentBufferSize;	
+    bool* dirtyFlags = malloc(sizeOfDirtyFrame);
     PageFrame* pageFrameToGetDirtyFlags;
     pageFrameToGetDirtyFlags = (PageFrame*)bm->mgmtData;
     for (int k = 0; k < maxBufferSize; k++) { //Iterating through the buffer.
