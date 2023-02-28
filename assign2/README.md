@@ -36,9 +36,34 @@ In a database system, the buffer pool is used to cache frequently accessed data 
 
 ### BUFFER POOL FUNCTIONS:
 
+A new buffer pool is creatd for a page file that already exists on disk. Here, while the existing page file is on disk, the newly created buffer pool is formed in memory. In otrder to perform different operations on this page file on disk, we use Storage Manager from Assignment 1.
+
 #### 1.initBufferPool():
+
+- This method is used to create and initialise a new memory buffer pool.
+- This  method takes following inputs:
+- numPages: size of the buffer or number of page frames that the buffer can store.
+- pageFileName: Holds the page file's name for which the pages are being created.
+- strategy: Holds the page replacement techniques used by the buffer pool(FIFO, LRU, LFU or CLOCK).
+- stratData: Holds parameters required along with page replacement technique.
+- Initially, check if buffer manager already exists. Return RC_BM_INVALID  error if buffer manager does not exists.
+- Check for page file name , return RC_FILE_NOT_FOUND if file is not found.
+- Now, initialise the buffer manager's(bm's) variables strategy, pageFile and numPages.
+- Allocate total  memory required i.e, number of pages times size of each page.
+- Now, set the values for buffer pool variables.
+- Store the page frame in buffer pool and return RC_OK message.
+
 #### 2.shutdownBufferPool():
+- This method is used to destroy the buffer pool.
+- Function now releases the memory assigned to all the uffer pool resources. 
+- Use  forceFlush() to flush the buffer pool of all dirty pages before destroying it. 
+- If any page is currently being accessed by a client, RC_PINNED_PAGES_IN_BUFFER error will be generated.
 #### 3.forceFlushPool():
+- This function writes the dirty pages (modified pages with dirtyBit value as 1) to the disk.
+- The following two connditions are checked,
+- It checks for all the page frames in the buffer pool, if dirtyBit = 1 (indicating that the page frame content has been modified by some client) and fixCount = 0 (indicating no user is using that page Frame).
+- When both above mentioned conditions are satisfied, the page frame is written to the page file on disk.
+
 
 ### PAGE MANAGEMENT FUNCTIONS:
 These functions are used to pin pages, unpin pages, mark pages as dirty, and force a page back to disk.<br>
