@@ -74,6 +74,15 @@ These functions are used to pin pages, unpin pages, mark pages as dirty, and for
 - When found, it sets dirtyBit = 1 for that page.
 
 #### 2.pinPage():
+- With the pinPage function, a page is retrieved from the buffer pool and pinned in memory. As input, it takes a pointer to the buffer pool structure (BM_BufferPool), a pointer to a BM_PageHandle structure that will hold the page data, and the page number (pageNum).
+
+- If the requested page has already been placed in the buffer pool, the function simply returns a pointer to the page frame containing the page data and increases its fix count by 1.
+
+- If the page is not in the buffer pool, the function reads it from disk and finds a free page frame to store it. The replacement strategy used to choose a page frame depends on the implementation of the buffer manager. Once a page frame has been chosen, the page data is read from disk and stored in the page frame. The function then updates the BM_PageHandle structure to point to the page frame and sets the fix count of the page to 1.
+
+- In the absence of free page frames in the buffer pool, the function evicts one of the existing frames to make room for the new page.
+
+- After pinning the page in memory, the function returns RC_OK to indicate success. If an error occurs, the function returns an appropriate error code
 
 #### 3.unpinPage():
 - This function is used to unpin the page. 
