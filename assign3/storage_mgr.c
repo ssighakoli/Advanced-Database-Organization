@@ -63,7 +63,7 @@ extern RC openPageFile (char *fileName, SM_FileHandle *fHandle)
     // Checking whether the file is opened or not
     if (filePointer!= NULL)
     {
-        printf("openPageFile: Inside if: file found: %s\n",fileName);
+        //printf("openPageFile: Inside if: file found: %s\n",fileName);
     	//printf("Setting the pointer to the end of the file");
     	// Moving the pointer to the end of the file
         //fseek(filePointer,0,SEEK_END); 
@@ -90,7 +90,8 @@ extern RC openPageFile (char *fileName, SM_FileHandle *fHandle)
         //Setting current page position of fhandle to zero
         fHandle->curPagePos = 0;
         //fHandle->mgmtInfo = filePointer;
-        printf("openPageFile: fHandle->totalNumPages: %d \n",fHandle->totalNumPages);
+       // printf("openPageFile: fHandle->totalNumPages: %d \n",fHandle->totalNumPages);
+        fHandle->mgmtInfo = filePointer;
         // Set the file pointer to the beginning of the file
         //fseek(filePointer,0,SEEK_SET);
         fclose(filePointer);
