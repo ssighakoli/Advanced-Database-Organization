@@ -85,8 +85,8 @@ extern void FIFO_PageReplacementStrategy(BM_BufferPool *const bm, PageFrame *pag
                    {
 		              SM_FileHandle fileHandler;	   
                       openPageFile(bm->pageFile, &fileHandler);
-                      printf("In FIFO page replacement strategy..Found dirty bit, front index %d\n",frontIndexOfQueue);
-                      printf("In FIFO page replacement strategy..Found dirty bit, writing to disk: %s\n",fifoFrame[frontIndexOfQueue].pageContent);
+                     // printf("In FIFO page replacement strategy..Found dirty bit, front index %d\n",frontIndexOfQueue);
+                      //printf("In FIFO page replacement strategy..Found dirty bit, writing to disk: %s\n",fifoFrame[frontIndexOfQueue].pageContent);
 		              writeBlock(fifoFrame[frontIndexOfQueue].pageNum, &fileHandler, fifoFrame[frontIndexOfQueue].pageContent);
                       numberOfWrites++;
                    }
@@ -101,7 +101,7 @@ extern void FIFO_PageReplacementStrategy(BM_BufferPool *const bm, PageFrame *pag
                 }
             }
         }
-    printf("In FIFO page replacement strategy..Found dirty bit, front index %d\n",frontIndexOfQueue);    
+   // printf("In FIFO page replacement strategy..Found dirty bit, front index %d\n",frontIndexOfQueue);    
 }
 
 //LRU Strategy
@@ -110,7 +110,7 @@ extern void LRU_PageReplacementStrategy(BM_BufferPool *const bm, PageFrame *page
     PageFrame *lruFrame = (PageFrame *) bm->mgmtData;
     SM_FileHandle fileHandler;
 
-	int k, indexOfLeastHitPage, pageWithLeaseHitNum;
+	int k, indexOfLeastHitPage=0, pageWithLeaseHitNum;
 
 	// Interating through frames
 	for(k = 0; k < currentBufferSize; k++)
@@ -153,7 +153,7 @@ extern void LRU_PageReplacementStrategy(BM_BufferPool *const bm, PageFrame *page
 //This method is used to create and initialize the buffer pool.
 RC initBufferPool(BM_BufferPool *const bm, const char *const pageFileName, const int numPages, ReplacementStrategy strategy, void *stratData)
 {
-    printf("-----------------InitBufferPool: Initializing buffer pool---------------------\n");
+    //printf("-----------------InitBufferPool: Initializing buffer pool---------------------\n");
     pthread_mutex_lock(&mutex);  //Acquiring lock
     int k=0;
     int size_bm=0;
@@ -183,7 +183,7 @@ RC initBufferPool(BM_BufferPool *const bm, const char *const pageFileName, const
 	bm->mgmtData = initialPageFrame;
 
 	pthread_mutex_unlock(&mutex); //Release lock
-    printf("---------------------InitBufferPool: end-----------------------------------\n");
+    //printf("---------------------InitBufferPool: end-----------------------------------\n");
 	
 	return RC_OK;		
 }
@@ -192,7 +192,7 @@ RC initBufferPool(BM_BufferPool *const bm, const char *const pageFileName, const
 //This method is used to destroy the buffer pool.
 RC shutdownBufferPool(BM_BufferPool *const bm)
 {
-    printf("--------------ShutdownBufferPool: Start------------------\n");
+   // printf("--------------ShutdownBufferPool: Start------------------\n");
     pthread_mutex_unlock(&mutex);	
     pthread_mutex_lock(&mutex); //Acquire lock
     int k=0;
@@ -213,7 +213,7 @@ RC shutdownBufferPool(BM_BufferPool *const bm)
 	free(pageFrameToShutDown); // releasing the memory to avoid unneccessary leaks
 	bm->mgmtData = NULL;
 	pthread_mutex_unlock(&mutex); //Release lock
-    printf("--------------ShutdownBufferPool: End----------------------\n");
+    //printf("--------------ShutdownBufferPool: End----------------------\n");
 	return RC_OK;
 
 
@@ -222,7 +222,7 @@ RC shutdownBufferPool(BM_BufferPool *const bm)
 //This method is used to write all dirty pages from buffer pool to disk.
 RC forceFlushPool(BM_BufferPool *const bm)
 {
-    printf("--------------Force flush pool: Start-----------------------\n");
+    //printf("--------------Force flush pool: Start-----------------------\n");
 	pthread_mutex_unlock(&mutex);
 	pthread_mutex_lock(&mutex);//Acquire lock
 	
@@ -246,7 +246,7 @@ RC forceFlushPool(BM_BufferPool *const bm)
         }
     }
     pthread_mutex_unlock(&mutex); //Release lock
-	printf("--------------Force flush pool: End------------------------\n");
+	//printf("--------------Force flush pool: End------------------------\n");
 	return RC_OK;
 }
 
@@ -288,7 +288,7 @@ extern RC unpinPage(BM_BufferPool* const bm, BM_PageHandle* const page)
     {
         if (pageToUnpin[k].pageNum == page->pageNum) //If the given page's pageNum matches with that of current page
         {
-            printf("unpinPage: page found to unpin with page number: %d\n",page->pageNum);
+            //printf("unpinPage: page found to unpin with page number: %d\n",page->pageNum);
             pageToUnpin[k].fixCount--;
 	    break;		
         }
@@ -320,10 +320,10 @@ extern RC pinPage (BM_BufferPool *const bm, BM_PageHandle *const page, const Pag
         pageFrameToPin[0].hitForLRU = hitCount;
 		page->pageNum = pageNum;
 		page->data = pageFrameToPin[0].pageContent;
-        printf("In first if block: page number is: %d\n", page->pageNum); 
-        printf("In first if block: page data is: %s\n", page->data); 
-	    printf("In first if block: page frame data is: %s\n", pageFrameToPin[0].pageContent);    
-        printf("If block exited!\n");
+       // printf("In first if block: page number is: %d\n", page->pageNum); 
+       // printf("In first if block: page data is: %s\n", page->data); 
+	   // printf("In first if block: page frame data is: %s\n", pageFrameToPin[0].pageContent);    
+       // printf("If block exited!\n");
 		return RC_OK;		
     }
     else
@@ -336,26 +336,26 @@ extern RC pinPage (BM_BufferPool *const bm, BM_PageHandle *const page, const Pag
 		  {
             if(pageFrameToPin[k].pageNum == pageNum) //Meaning, its a hit
 			{
-                printf("In Else - if block!\n");
+                //printf("In Else - if block!\n");
                 pageFrameToPin[k].fixCount++;
 			    isCurrentBufferFull = false;
                 hitCount = hitCount + 1; 
                 pageFrameToPin[k].hitForLRU=hitCount;
                 page->pageNum = pageNum;
 		        page->data = pageFrameToPin[k].pageContent;
-                printf("In Else - if block: page data is: %s\n", page->data); 
+               // printf("In Else - if block: page data is: %s\n", page->data); 
                 break;
             }
 		 }else //Meaning, it is not a hit and page needs to be read from disk
             {
                 SM_FileHandle fileHandler;
-                printf("In Else - else block!\n");
+                //printf("In Else - else block!\n");
 				openPageFile(bm->pageFile, &fileHandler);
 				pageFrameToPin[k].pageContent = (SM_PageHandle) malloc (PAGE_SIZE);
-                printf("In else - else block: page frame data before readBlock is: %s\n", pageFrameToPin[k].pageContent);
-                printf("In else - else block: page pageNum before readBlock is: %d\n", pageNum);
+                //printf("In else - else block: page frame data before readBlock is: %s\n", pageFrameToPin[k].pageContent);
+                //printf("In else - else block: page pageNum before readBlock is: %d\n", pageNum);
 				readBlock(pageNum, &fileHandler, pageFrameToPin[k].pageContent);
-				printf("In else - else block: page frame data after readBlock is: %s\n", pageFrameToPin[k].pageContent);
+				//printf("In else - else block: page frame data after readBlock is: %s\n", pageFrameToPin[k].pageContent);
 				pageFrameToPin[k].pageNum = pageNum;
 				pageFrameToPin[k].fixCount = 1;
 				hitCount =hitCount + 1;
@@ -364,9 +364,9 @@ extern RC pinPage (BM_BufferPool *const bm, BM_PageHandle *const page, const Pag
 				page->data = pageFrameToPin[k].pageContent;
                 pageFrameToPin[k].hitForLRU=hitCount;
 				isCurrentBufferFull = false;
-                printf("In else - else block: page frame data is: %s\n", pageFrameToPin[k].pageContent);
-                printf("In else - else block: page number is: %d\n", page->pageNum);  
-                printf("In else - else block: page data is: %s\n", page->data); 
+               // printf("In else - else block: page frame data is: %s\n", pageFrameToPin[k].pageContent);
+               // printf("In else - else block: page number is: %d\n", page->pageNum);  
+               // printf("In else - else block: page data is: %s\n", page->data); 
 				break;
 			}
 
@@ -447,7 +447,7 @@ extern RC forcePage (BM_BufferPool *const bm, BM_PageHandle *const page)
 //This method returns an array of frame contents
 PageNumber* getFrameContents(BM_BufferPool* const bm)
 {
-    printf("getFrameContents: start\n");
+    //printf("getFrameContents: start\n");
     PageFrame* pageFrameToGetContents;
     PageNumber* pageNumbers;
     pageFrameToGetContents = (PageFrame*)bm->mgmtData;
@@ -461,7 +461,7 @@ PageNumber* getFrameContents(BM_BufferPool* const bm)
          pageNumbers[k] = NO_PAGE;
        }
     }
-    printf("getFrameContents: end\n");
+    //printf("getFrameContents: end\n");
     return pageNumbers;
 }
 
