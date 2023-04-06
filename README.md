@@ -16,6 +16,6 @@
 
 ### We are group 6 and below are the group members details:
 
-Anusha SP (asp@hawk.iit.edu) <br>
+Anusha Sonte Parameshwar (asp@hawk.iit.edu) <br>
 Swetha Sighakolli (ssighakolli@hawk.iit.edu) <br>
 Sai Priya Vuppugalla (svuppugalla@hawk.iit.edu) <br>
