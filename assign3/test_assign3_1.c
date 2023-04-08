@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include "dberror.h"
-#include "expr.h"
+#include "expr.h" 
 #include "record_mgr.h"
 #include "tables.h"
 #include "test_helper.h"
@@ -333,7 +333,8 @@ testUpdateTable (void)
     {
       RID rid = rids[i];
       TEST_CHECK(getRecord(table, rid, r));
-      ASSERT_EQUALS_RECORDS(fromTestRecord(schema, finalR[i]), r, schema, "compare records");
+      Record *l=fromTestRecord(schema, finalR[i]);
+      ASSERT_EQUALS_RECORDS(l, r, schema, "compare records");
     }
   
   TEST_CHECK(closeTable(table));
@@ -427,14 +428,16 @@ testInsertManyRecords(void)
     {
       RID rid = rids[i];
       TEST_CHECK(getRecord(table, rid, r));
-      ASSERT_EQUALS_RECORDS(fromTestRecord(schema, inserts[i%10]), r, schema, "compare records");
+      Record *l= fromTestRecord(schema,  inserts[i%10]);
+      ASSERT_EQUALS_RECORDS(l, r, schema, "compare records");
     }
   
   r = fromTestRecord(schema, updates[0]);
   r->id = rids[randomRec];
   TEST_CHECK(updateRecord(table,r));
   TEST_CHECK(getRecord(table, rids[randomRec], r)); 
-  ASSERT_EQUALS_RECORDS(fromTestRecord(schema, updates[0]), r, schema, "compare records");
+  Record *l=fromTestRecord(schema, updates[0]);
+  ASSERT_EQUALS_RECORDS(l, r, schema, "compare records");
    
   TEST_CHECK(closeTable(table));
   TEST_CHECK(deleteTable("test_table_t"));
