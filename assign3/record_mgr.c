@@ -15,9 +15,8 @@ typedef struct RecordMaster
 	BM_BufferPool bufferPool;
 	Expr *scanCondition;
 } RecordMaster;
-
+//necessary global variables declared
 bool isRecManagerOpen = false;
-
 const int ATTR_CAPACITY = 15;
 const int SCHEMA_OVERMAX = ((PAGE_SIZE-16) / 80 ) + 1;
 const int SCHEMA_TYPELENGTH_OVERMAX = 4084;
@@ -47,20 +46,20 @@ extern RC storeInformationToStorageHandler(char *name, char data[])
 {
 	SM_FileHandle fHandle;
 	int RC_State;
-
-	if((RC_State = createPageFile(name)) == RC_FILE_NOT_FOUND)
+//The below functions are being called from storage manager based on the page file state
+	if((RC_State = createPageFile(name)) == RC_FILE_NOT_FOUND)//creates page file
 	{
 		return RC_State;
 	}
-	if((RC_State = openPageFile(name, &fHandle)) != RC_OK)
+	if((RC_State = openPageFile(name, &fHandle)) != RC_OK)//Opens page file
 	{
 		return RC_State;
 	}	
-	if((RC_State = writeBlock(0, &fHandle, data)) == RC_WRITE_FAILED)
+	if((RC_State = writeBlock(0, &fHandle, data)) == RC_WRITE_FAILED)//writes pagefile
 	{
 		return RC_State;
 	}
-	if((RC_State = closePageFile(&fHandle)) != RC_OK)
+	if((RC_State = closePageFile(&fHandle)) != RC_OK)//closes page file
 	{
 		return RC_State;
 	}
@@ -102,19 +101,19 @@ extern RC initRecordManager (void *mgmtData)
 	return RC_OK;
 }
 
-// This method is used to shut down the record manager.
+// This method is used to shutdown the record manager.
 extern RC shutdownRecordManager ()
 {
 	recMgr = NULL;
 	free(recMgr);
-	if(recMgr == NULL)
+	if(recMgr == NULL)//Errror handling checks before shutting down the record manager
 	{
 	   isRecManagerOpen = false;
 	}
 	else
 	{
-		printf("shutdownRecordManager(): Record Manager did not shutdown properly!");
-		return RC_ERROR;
+		printf("shutdownRecordManager(): Record Manager did not shutdown properly.");
+		return RC_ERROR;// return error with the above statement
 	}
 	return RC_OK;
 }
@@ -124,12 +123,12 @@ extern RC shutdownRecordManager ()
 extern RC createTable (char *name, Schema *schema)
 {
 	char data[PAGE_SIZE];
-	ReplacementStrategy strategy = RS_LRU;
+	ReplacementStrategy strategy = RS_LRU;//calling the strategy implemented in storage manager to initiate bufferpool
 	recMgr = (RecordMaster*) malloc(sizeof(RecordMaster));
 
-	initBufferPool(&recMgr->bufferPool, name, 100, strategy, NULL);
+	initBufferPool(&recMgr->bufferPool, name, 100, strategy, NULL);//Buffer manager is used to initiate bufferpool
 
-	if(schema->numAttr > SCHEMA_OVERMAX)
+	if(schema->numAttr > SCHEMA_OVERMAX)//verifying the schema size with the given fixed size
 	{
 		return RC_SCHEMA_TOO_BIG;
 	}
@@ -167,7 +166,7 @@ extern RC createTable (char *name, Schema *schema)
 Schema* setSchemaAttributes(SM_PageHandle smHandle, int totalAttributes)
 {
     Schema* newSchema = (Schema*)malloc(sizeof(Schema));
-    newSchema->numAttr = totalAttributes;
+    newSchema->numAttr = totalAttributes;// Attribute names, typelength and datatypes are set using this function
     newSchema->attrNames = (char**)malloc(sizeof(char*) * totalAttributes);
     newSchema->dataTypes = (DataType*)malloc(sizeof(DataType) * totalAttributes);
     newSchema->typeLength = (int*)malloc(sizeof(int) * totalAttributes);
@@ -201,17 +200,17 @@ extern RC openTable (RM_TableData *rel, char *name)
 	rel->mgmtData = recMgr;
 	rel->name = name;
     
-	pinPage(&recMgr->bufferPool, &recMgr->pageHandle, 0);
+	pinPage(&recMgr->bufferPool, &recMgr->pageHandle, 0);//Buffer manager pinpage used to pin the page initially to 0
 	smHandle = (char*) recMgr->pageHandle.data;
 
 	memcpy(&recMgr->rowsCount, smHandle, sizeof(int));
 	memcpy(&recMgr->firstFreePage, smHandle += sizeof(int), sizeof(int));
 	memcpy(&totalAttributes, smHandle += sizeof(int), sizeof(int));
 
-	newSchema = setSchemaAttributes(smHandle,totalAttributes);
-	rel->schema = newSchema;
+	newSchema = setSchemaAttributes(smHandle,totalAttributes);//this containes the new values set using setSchemaAttributes.
+	rel->schema = newSchema;//returns the newly added schema
 
-	markDiryAndUnpin(recMgr);
+	markDiryAndUnpin(recMgr);//marks dirty and unpins the page as a best practice
 	return RC_OK;
 } 
 
@@ -220,7 +219,7 @@ extern RC openTable (RM_TableData *rel, char *name)
 extern RC closeTable (RM_TableData *rel)
 {
 	recMgr = rel->mgmtData;
-	forceFlushPool(&recMgr->bufferPool);
+	forceFlushPool(&recMgr->bufferPool);//flushes the buffer pool to make it empty 
 	isRecManagerOpen = false;
 	return RC_OK;
 }
@@ -234,7 +233,7 @@ extern RC deleteTable (char *name)
 	{
 		return RC_FILE_NOT_FOUND;
 	}
-	remove(name);
+	remove(name);// the table named "name" would be removed as to make delete table successful
 	isRecManagerOpen = false;
 	return RC_OK;
 }
@@ -244,7 +243,7 @@ extern int getNumTuples (RM_TableData *rel)
 {
 	recMgr = rel->mgmtData;
     int numberOfTuples = recMgr->rowsCount;
-	return numberOfTuples;
+	return numberOfTuples;// returns the total count of tuples in the table
 }
 
 
@@ -256,8 +255,8 @@ extern void setRecordParams(RM_TableData *rel, Record *record, int sizeOfRecord)
 {
     RecordMaster *recMgr = rel->mgmtData;
     RID *recID = &record->id;
-    recID->page = recMgr->firstFreePage;
-	pinPage(&recMgr->bufferPool, &recMgr->pageHandle, recID->page);
+    recID->page = recMgr->firstFreePage;// identifies the first available page
+	pinPage(&recMgr->bufferPool, &recMgr->pageHandle, recID->page);//pins that page using buffermanager pinpage method
 	recID->slot = getAvailableSlot(recMgr->pageHandle.data, sizeOfRecord);
 } 
 
