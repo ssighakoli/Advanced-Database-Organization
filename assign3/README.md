@@ -24,7 +24,7 @@
 1. Tombstone mechanism to manage deleted records and have a replica of them in the database.
 2. Adding a condition to check if schema size is larger than page size.
 3. Adding a condition to check if record size is larger than data size.
-4. Transaction identifier TID's has been implemented for record operations.
+4. Transaction identifier(TID's) have been implemented for record operations.
 
 ## SOLUTION DESCRIPTION:
 
