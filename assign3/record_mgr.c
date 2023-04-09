@@ -4,10 +4,13 @@
 #include "storage_mgr.h"
 #include "buffer_mgr.h"
 #include "record_mgr.h"
+#include <time.h>
+
 
 typedef struct RecordMaster
 {
 	RID recID;
+	TID tid;
 	PageNumber firstFreePage;
 	int rowsCount;
 	int numRecScanned;
@@ -15,6 +18,8 @@ typedef struct RecordMaster
 	BM_BufferPool bufferPool;
 	Expr *scanCondition;
 } RecordMaster;
+
+
 //necessary global variables declared
 bool isRecManagerOpen = false;
 const int ATTR_CAPACITY = 15;
@@ -22,8 +27,33 @@ const int SCHEMA_OVERMAX = ((PAGE_SIZE-16) / 80 ) + 1;
 const int SCHEMA_TYPELENGTH_OVERMAX = 4084;
 const int NO_PAGE_VALUE = -1;
 const int NO_SLOT_VALUE = -1;
+const int CURRENT_TRANSACTION_ID = 0;
 
 RecordMaster *recMgr;
+
+
+ //TID Helpers
+TID generate_tid(int transactionID, int page, int slot) {
+	TID tid;
+	tid.transactionID = transactionID;
+	tid.page = page;
+	tid.slot = slot;
+	return tid;
+}
+
+void attach_tid(TID tid, Record* record) {
+	record->tid = tid;
+}
+
+extern int generateRandomTransactionId()
+{
+    int transaction_id = 0;
+    while (transaction_id < 100000 || transaction_id > 999999) {
+        transaction_id = rand(); 
+        transaction_id = transaction_id % 1000000;  
+    }
+    return transaction_id;
+}
 
 // This is a helper method to findout a freeslot based on data and recordSize
 int getAvailableSlot(char *data, int recordSize)
@@ -267,6 +297,7 @@ extern RC insertRecord(RM_TableData *rel, Record *record) {
 
 	RID *recID = &record->id;
 	char *recordData, *slotAddr;
+	int transactionID = 0;
 
 	int sizeOfRecord = getRecordSize(rel->schema);
 	setRecordParams(rel, record,sizeOfRecord);
@@ -281,6 +312,14 @@ extern RC insertRecord(RM_TableData *rel, Record *record) {
     }
 
 	slotAddr = recordData + (recID->slot * sizeOfRecord);
+
+	//TID's
+	transactionID = generateRandomTransactionId();
+	TID tid = generate_tid(transactionID, recID->page, recID->slot);
+	attach_tid(tid, record);
+
+	printf("TID and Tombstone Implentation successfull in INSERT record\n");
+
 	memmove(slotAddr, "+", sizeof(char));
 
     for (int i = 0; i < sizeOfRecord - 1; i++) {
@@ -298,6 +337,7 @@ extern RC insertRecord(RM_TableData *rel, Record *record) {
 //Below method removes a specific record identified by the "id" from the table referred to by the "rel".
 extern RC deleteRecord (RM_TableData *rel, RID id)
 {
+	int transactionID = 0;
     // Retrieving our meta data stored in the table
 	RecordMaster *recMgr = rel->mgmtData;
 	BM_BufferPool bufferpool = recMgr->bufferPool;
@@ -311,6 +351,13 @@ extern RC deleteRecord (RM_TableData *rel, RID id)
 	recMgr->firstFreePage = pageNumber;
 	
 	char *recordData = recMgr->pageHandle.data + id.slot * getRecordSize(rel->schema);
+
+	transactionID = generateRandomTransactionId();
+	TID tid = generate_tid(transactionID, id.page, id.slot);
+	attach_tid(tid, (Record*)recordData);
+
+
+	printf("TID and Tombstone Implentation successfull in DELETE record\n");
 	
     // Implementing tombstone mechanism using '-'. Here, '-' implies that  record is deleted
 	*recordData = '-';
@@ -331,6 +378,7 @@ extern RC updateRecord (RM_TableData *rel, Record *record)
 {	
     // Retrieving our meta data stored in the table
 	RecordMaster *recMgr = rel->mgmtData;
+	int transactionID = 0;
   
 	pinPage(&recMgr->bufferPool, &recMgr->pageHandle, record->id.page); // Pinning the page which needs to be  updated
 
@@ -342,6 +390,12 @@ extern RC updateRecord (RM_TableData *rel, Record *record)
 	
 	recordData = recMgr->pageHandle.data + (id.slot * sizeOfRecord);   // reading record's memory location   
 	setTomstoneValue(recordData, 0, '+');  // Implementing tombstone mechanism using '+'. Here, '+' implies that  record is not empty
+
+	transactionID = generateRandomTransactionId();
+	TID tid = generate_tid(transactionID, id.page, id.slot);
+	attach_tid(tid, record);
+
+	printf("TID and Tombstone Implentation successfull in UPDATE record\n");
 	
     // Using memmove() for Copying the updated record data to the exisitng one;
 	memmove(recordData + 1, record->data + 1, sizeOfRecord - 1);
@@ -359,6 +413,7 @@ extern RC getRecord (RM_TableData *rel, RID id, Record *record)
 {
 	// Getting record maager's  meta data from the table
 	RecordMaster *recMgr = rel->mgmtData;
+	int transactionID = 0;
 	if(recMgr!=NULL)
 	{
 	
@@ -372,6 +427,10 @@ extern RC getRecord (RM_TableData *rel, RID id, Record *record)
 	{
         //Set record's id
         record->id = id;
+		transactionID = generateRandomTransactionId();
+		TID tid = generate_tid(transactionID, id.page, id.slot);
+		attach_tid(tid, record);
+		printf("TID and Tombstone Implentation successfull in GET record\n");
         recordData = record->data;
         dataPtr = dataAddr + 1;
         for (int n = 1; n < sizeOfRecord; n++) {
