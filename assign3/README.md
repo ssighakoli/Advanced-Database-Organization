@@ -21,10 +21,9 @@
 11. Use the command 'make run_test_additional' to run the additional test case.
 
 ## Additional functionality included for extra credit:
-1. Tombstone mechanism to manage deleted records and have a replica of them in the database.
+1. TID and Tombstone mechanism to manage records and have a replica of them in the database. This implementation is performed by using a struct TID and adding it to the existing Record struct along with RID.
 2. Adding a condition to check if schema size is larger than page size.
 3. Adding a condition to check if record size is larger than data size.
-4. Transaction identifier(TID's) have been implemented for record operations.
 
 ## SOLUTION DESCRIPTION:
 
