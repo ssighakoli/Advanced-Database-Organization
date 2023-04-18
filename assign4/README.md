@@ -5,13 +5,13 @@
 - A B+-tree stores pointer to records index by a keys of a given datatype. Pointers to intermediate nodes should be represented by the page number of the page the node is stored in. <br>
 - The insertion rules are as below:
 
-### Leaf Split: 
+#### Leaf Split: 
 In case a leaf node need to be split during insertion and n is even, the left node should get the extra key. For odd values of n we can always evenly split the keys between the two nodes. In both cases the value inserted into the parent is the smallest value of the right node.
 
-### Non-Leaf Split: 
+#### Non-Leaf Split: 
 In case a non-leaf node needs to be split and n is odd, we cannot split the node evenly (one of the new nodes will have one more key). In this case the "middle" value inserted into the parent should be taken from the right node.
 
-### Leaf Underflow: 
+#### Leaf Underflow: 
 In case of a leaf underflow your implementation should first try to redistribute values from a sibling and only if this fails merge the node with one of its siblings. Both approaches should prefer the left sibling. 
 
 ## Steps to run the script:
