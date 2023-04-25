@@ -21,6 +21,13 @@ typedef struct Value {
 	} v;
 } Value;
 
+typedef struct TID
+{
+  char transactionID;
+  int page;
+  int slot;
+}TID;
+
 typedef struct RID {
 	int page;
 	int slot;
@@ -29,6 +36,7 @@ typedef struct RID {
 typedef struct Record
 {
 	RID id;
+	TID tid;
 	char *data;
 } Record;
 
