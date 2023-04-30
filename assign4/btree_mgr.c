@@ -112,7 +112,7 @@ RC createBtree(char *idxId, DataType keyType, int n) {
 
     if(returnCode != RC_OK)
     {
-        free(btreeMaster);
+        //free(btreeMaster);
         return RC_ERROR;
     }
     else
@@ -145,7 +145,7 @@ RC openBtree(BTreeHandle **tree, char *idxId) {
 	if (returnCode != RC_OK)
 	{
 		printf("\n Buffer pool not initialized successfully\n");
-		free(btreeMaster);
+		//free(btreeMaster);
 		return returnCode;
 	}
 
@@ -174,8 +174,8 @@ RC closeBtree(BTreeHandle *tree) {
     else
     {
         printf("closeBtree(): BTree closed successfully!\n");
-        free(btreeMaster);
-	    free(tree);
+        //free(btreeMaster);
+	 //free(tree);
     }
 	return RC_OK;
 }
